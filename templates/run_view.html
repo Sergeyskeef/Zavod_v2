@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zavod Carousel — Просмотр карусели</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f0f2f5; }
+    h1, h2, h3 { color: #1c1e21; }
+    .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .back-link { display: inline-block; margin-bottom: 25px; color: #6C5CE7; text-decoration: none; font-weight: 600; font-size: 0.95em; }
+    .back-link:hover { text-decoration: underline; }
+    
+    .header-info { border-bottom: 1px solid #eee; margin-bottom: 25px; padding-bottom: 20px; }
+    .header-info h1 { margin-top: 0; font-size: 1.8em; margin-bottom: 10px; }
+    .source-meta { font-size: 0.9em; color: #65676b; }
+    .source-meta a { color: #3498db; text-decoration: none; }
+    
+    .summary-section { background: #f8f9fa; border-left: 4px solid #6C5CE7; padding: 15px 20px; border-radius: 4px; margin-bottom: 30px; }
+    .summary-section h2 { font-size: 1.1em; margin-top: 0; margin-bottom: 8px; color: #6C5CE7; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .carousel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .slide-card { background: #fff; border: 1px solid #e4e6eb; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; position: relative; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .slide-card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.05); }
+    
+    .slide-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f0f2f5; padding-bottom: 10px; }
+    .slide-num { font-weight: 800; font-size: 0.85em; color: #bcc0c4; }
+    .slide-type { font-size: 0.75em; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+    .type-hook { background: #e3f2fd; color: #1976d2; }
+    .type-content { background: #f0f2f5; color: #65676b; }
+    .type-cta { background: #e8f5e9; color: #2e7d32; }
+    
+    .slide-title { font-size: 1.1em; font-weight: 700; margin-bottom: 10px; color: #050505; line-height: 1.3; }
+    .slide-body { font-size: 0.95em; color: #4b4b4b; flex-grow: 1; white-space: pre-wrap; }
+    
+    .slide-footer { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #eee; }
+    .visual-hint { font-size: 0.8em; color: #8a8d91; font-style: italic; }
+    .expert-badge { display: inline-flex; align-items: center; gap: 5px; background: #6C5CE7; color: white; font-size: 0.7em; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 8px; }
+
+    .caption-section { border-top: 2px solid #f0f2f5; padding-top: 25px; }
+    .caption-box { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; font-size: 0.95em; white-space: pre-wrap; }
+    .hashtags { color: #1877f2; margin-top: 10px; font-weight: 500; }
+    
+    .empty-state { text-align: center; padding: 50px 0; }
+    .empty-state p { color: #65676b; font-size: 1.1em; }
+  </style>
+</head>
+<body>
+  <a href="/" class="back-link">← Назад к панели управления</a>
+  
+  <div class="container">
+    {% if run %}
+      <div class="header-info">
+        <div class="source-meta">Источник: <a href="{{ run.reference.url }}" target="_blank">{{ run.reference.url }}</a></div>
+        <h1>{{ run.carousel.main_angle or run.reference.title }}</h1>
+      </div>
+
+      <div class="summary-section">
+        <h2>Резюме контента</h2>
+        <p>{{ run.analyzed.summary }}</p>
+      </div>
+
+      <h2>Слайды карусели</h2>
+      <div class="carousel-grid">
+        {% for slide in run.carousel.slides %}
+          <div class="slide-card">
+            <div class="slide-header">
+              <span class="slide-num">СЛАЙД {{ slide.index }}</span>
+              <span class="slide-type type-{{ slide.type }}">{{ slide.type }}</span>
+            </div>
+            <div class="slide-title">{{ slide.title }}</div>
+            <div class="slide-body">{{ slide.body }}</div>
+            
+            <div class="slide-footer">
+              {% if slide.visual_hint %}
+                <div class="visual-hint"><strong>Визуал:</strong> {{ slide.visual_hint }}</div>
+              {% endif %}
+              {% if slide.show_expert_photo %}
+                <div class="expert-badge">● Фото эксперта</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if run.carousel.caption %}
+      <div class="caption-section">
+        <h2>Текст поста (Caption)</h2>
+        <div class="caption-box">
+          {{ run.carousel.caption }}
+          <div class="hashtags">{{ run.carousel.hashtags | join(' ') if run.carousel.hashtags else '' }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+    {% else %}
+      <div class="empty-state">
+        <p>Результаты еще не сгенерированы. Пожалуйста, обработайте задачу из очереди.</p>
+        <a href="/" class="back-link">Вернуться на главную</a>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
