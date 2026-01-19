@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
@@ -32,8 +32,8 @@ class GenerationTask:
     platform: str
 
     status: TaskStatus = TaskStatus.PENDING
-    created_at: datetime = datetime.utcnow()
-    updated_at: datetime = datetime.utcnow()
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
 
     # ID PersistedRun, если задача успешно отработала
     run_id: Optional[str] = None

@@ -12,8 +12,8 @@ from src.clients.llm_client import LlmClient
 from src.models.task import TaskStatus, GenerationTask
 from src.models.persisted_run import PersistedRun
 from src.pipeline.fetch_refs import fetch_reference_for_url
-from src.pipeline.analyze_content import analyze_reference
-from src.pipeline.generate_carousel import generate_carousel_spec
+from src.pipeline.analyze_content import analyze_reference, create_dummy_analysis
+from src.pipeline.generate_carousel import generate_carousel_spec, create_dummy_carousel_spec
 from src.storage.json_storage import JsonStorage
 from src.storage.task_storage import TaskStorage
 
@@ -33,11 +33,13 @@ def process_one_pending_task(root: Path) -> Optional[GenerationTask]:
     load_dotenv()
     settings = Settings.from_env()
     
-    try:
-        llm_client = LlmClient()
-    except RuntimeError as e:
-        # Если LLM не настроен, это критическая ошибка для воркера
-        raise RuntimeError(f"LLM client initialization failed: {e}")
+    llm_client: Optional[LlmClient] = None
+    if settings.limits.llm_enabled:
+        try:
+            llm_client = LlmClient()
+        except RuntimeError as e:
+            # Если LLM не настроен, это критическая ошибка для воркера
+            raise RuntimeError(f"LLM client initialization failed: {e}")
 
     tasks_path = root / "data" / "tasks.jsonl"
     runs_path = root / "data" / "runs.jsonl"
@@ -58,8 +60,12 @@ def process_one_pending_task(root: Path) -> Optional[GenerationTask]:
         if ref is None:
             raise RuntimeError(f"No Reference found for URL: {task.source_url}. Check if it matches search queries.")
 
-        analyzed = analyze_reference(ref, llm_client)
-        spec = generate_carousel_spec(analyzed, llm_client)
+        if settings.limits.llm_enabled:
+            analyzed = analyze_reference(ref, llm_client)
+            spec = generate_carousel_spec(analyzed, llm_client)
+        else:
+            analyzed = create_dummy_analysis(ref)
+            spec = create_dummy_carousel_spec(analyzed)
 
         run = PersistedRun(
             created_at=datetime.utcnow(),

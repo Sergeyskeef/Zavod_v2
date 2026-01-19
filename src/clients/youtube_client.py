@@ -76,6 +76,32 @@ class YouTubeClient:
         print(f"DEBUG: Returning {len(references)} Reference objects.")
         return references
 
+    def fetch_video_by_url(self, url: str) -> Optional[Reference]:
+        """
+        Пытается получить видео напрямую по URL через Apify actor.
+        Возвращает первый валидный Reference или None.
+        """
+        input_payload: Dict[str, Any] = {
+            "startUrls": [{"url": url}],
+            "maxResults": 1,
+        }
+
+        try:
+            run = self._apify.start_actor(self.ACTOR_ID, input_payload)
+            run_id = run["id"]
+            final_run = self._apify.wait_for_run(run_id, timeout_sec=600)
+            ds_id = final_run["defaultDatasetId"]
+            items = self._apify.get_dataset_items(ds_id)
+        except ApifyClientError as e:
+            print(f"YouTube fetch by URL failed: {e}")
+            return None
+
+        for item in items:
+            ref = self._map_item_to_reference(item)
+            if ref:
+                return ref
+        return None
+
     def _map_item_to_reference(self, item: Dict[str, Any]) -> Optional[Reference]:
         """Мапит элемент ответа в Reference согласно контракту данных."""
         try:

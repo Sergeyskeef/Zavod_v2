@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
+from contextlib import contextmanager
 from typing import List, Optional
 
 from src.models.task import GenerationTask, TaskStatus
@@ -21,11 +22,34 @@ class TaskStorage:
         self.path = path
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
+    @staticmethod
+    @contextmanager
+    def _locked_open(path: Path, mode: str):
+        """
+        Открывает файл и, если возможно, ставит файловую блокировку.
+        """
+        f = path.open(mode, encoding="utf-8")
+        try:
+            try:
+                import fcntl
+                lock_type = fcntl.LOCK_EX if "w" in mode or "a" in mode else fcntl.LOCK_SH
+                fcntl.flock(f.fileno(), lock_type)
+            except Exception:
+                pass
+            yield f
+        finally:
+            try:
+                import fcntl
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+            except Exception:
+                pass
+            f.close()
+
     def _load_all(self) -> List[GenerationTask]:
         if not self.path.exists():
             return []
         tasks: List[GenerationTask] = []
-        with self.path.open("r", encoding="utf-8") as f:
+        with self._locked_open(self.path, "r") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -40,7 +64,7 @@ class TaskStorage:
         return tasks
 
     def _save_all(self, tasks: List[GenerationTask]) -> None:
-        with self.path.open("w", encoding="utf-8") as f:
+        with self._locked_open(self.path, "w") as f:
             for task in tasks:
                 line = json.dumps(task.to_serializable_dict(), ensure_ascii=False)
                 f.write(line + "\n")

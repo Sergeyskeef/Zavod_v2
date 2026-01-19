@@ -9,9 +9,14 @@
    ```bash
    pip install -r requirements.txt
    ```
-3. Создайте файл `.env` в корне проекта и добавьте ваш токен Apify:
+3. Создайте файл `.env` в корне проекта и добавьте переменные окружения:
    ```env
    APIFY_TOKEN=ваш_токен_здесь
+   OPENAI_API_KEY=ваш_openai_api_key
+   BLOTATO_API_KEY=ваш_blotato_api_key
+   APP_MODE=dev
+   EXPERT_PHOTO_URL=
+   BLOTATO_TEMPLATE_ID=base/slides/tutorial-carousel
    ```
    (Также поддерживается переменная `APIFY_API_TOKEN`).
 

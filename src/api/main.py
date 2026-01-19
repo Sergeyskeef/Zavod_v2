@@ -210,4 +210,4 @@ def get_latest_run_api():
         raise HTTPException(status_code=404, detail="No runs found")
     
     last_run = runs[-1]
-    return last_run.to_serializable_dict()
+    return last_run

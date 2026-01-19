@@ -132,3 +132,61 @@ def generate_carousel_spec(ac: AnalyzedContent, llm_client: LlmClient) -> Carous
         caption=caption,
         hashtags=hashtags,
     )
+
+
+def create_dummy_carousel_spec(ac: AnalyzedContent) -> CarouselSpec:
+    """
+    Заглушка карусели для dry-run режима без LLM.
+    """
+    main_angle = ac.suggested_carousel_angle or ac.title or "Полезные советы по Wildberries"
+
+    slides: List[Slide] = []
+    slides.append(
+        Slide(
+            index=1,
+            type=SlideType.HOOK,
+            title=main_angle,
+            body="Коротко и понятно для новичка на WB.",
+            visual_hint="Крупный заголовок, акцентный цвет",
+            show_expert_photo=True,
+        )
+    )
+
+    points = ac.key_points or []
+    if not points and ac.summary:
+        points = [ac.summary]
+    if not points:
+        points = ["Соберите ключевые шаги запуска и избегайте типичных ошибок."]
+
+    max_content = min(len(points), 8)
+    for i in range(max_content):
+        slides.append(
+            Slide(
+                index=len(slides) + 1,
+                type=SlideType.CONTENT,
+                title=f"Тезис {i + 1}",
+                body=points[i],
+                visual_hint="Иконки + короткие строки текста",
+                show_expert_photo=False,
+            )
+        )
+
+    slides.append(
+        Slide(
+            index=len(slides) + 1,
+            type=SlideType.CTA,
+            title="Сохрани и подпишись",
+            body="Чтобы не потерять и быстрее запустить продажи.",
+            visual_hint="Фото эксперта + CTA кнопка",
+            show_expert_photo=True,
+        )
+    )
+
+    return CarouselSpec(
+        reference_url=ac.reference_url,
+        main_angle=main_angle,
+        content_type=ac.content_type.value,
+        slides=slides,
+        caption=None,
+        hashtags=None,
+    )
